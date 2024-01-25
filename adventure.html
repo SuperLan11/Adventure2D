@@ -1,0 +1,405 @@
+<! --
+		class for drawing
+		class for hero
+		class for enemies
+		class for potions
+		
+		only global variables for:
+			canvas object
+			context2D			
+			main
+			
+		Local variables for hero, enemies, potion, and environment in draw class:
+			Put predetermined number of enemies and potions into lists of the draw class. Their attribute will be accesible from the list.
+			Instantiate hero
+			
+			2d environment list with grid. 
+			Empty positions are 0
+			hero is H
+			golem is G
+			snowman is S
+			void is V
+			B is brick
+			T is tree. 
+			If not null, drawBrick at indexes for x, y
+			
+			put keydown function in draw class?
+		
+		updaing enemy:
+			get list of adjacent tiles that don't have an obstacle or hero. isObstacle function?
+			randomly pick an adjacent tile from the list
+			call move function that incremenets/decrements position based on what tile was chosen
+			update and render enemy
+			
+		update hero:
+			same thing, but if hero moves to enemy (after enemy moves), maintain position and lower enemy health
+			
+			
+		when arrow key pressed, update and render hero, enemies, and potions (delete potions if hero moves to them). Don't forget hp bars
+		render both the hero/enemy and their health bar		
+		
+		draw grid lines later
+		
+		hierarchy:
+			Entity (brick, tree)
+				character
+					hero
+					monster							
+-- >
+
+<!doctype html>
+<html>
+	<script>				
+		class Entity
+		{
+			x;
+			y;	
+
+			constructor()
+			{
+				this.x = 0;
+				this.y = 0;
+			}
+						
+			update(moveX, moveY, hpChange)
+			{
+				this.x += moveX;
+				this.y += moveY;
+				this.hp += hpChange;
+			}
+			
+			// assumes canvas cleared already 
+			// redraw entity at x, y
+			// then redraw hp bar
+			render()
+			{								
+				/*if(type === 'B')
+				{
+					gameMain.drawBrick(this.x, this.y);
+				}
+				else if(type === 'T')
+				{
+					gameMain.drawTree(this.x, this.y);
+				}*/
+				
+				context.drawImage(this.pic, this.x, this.y, 64, 64);				
+			}
+		}			
+		
+		class Hero extends Entity
+		{					
+			constructor()
+			{
+				super();
+				
+				this.hp = 100;
+				this.maxHp = 100;
+				
+				this.atk = 1;
+				this.def = 1;
+				
+				this.x = 0;
+				this.y = 0;
+				
+				this.pic = new Image();
+				this.pic.src = "img/hero.png";				
+			}
+			
+			move(moveX, moveY)
+			{
+				// check boundaries later
+				this.x += moveX;
+				this.y += moveY;				
+			}						
+		}
+				
+		class Monster extends Entity
+		{					
+			constructor()
+			{	
+				super();
+				
+				this.hp = 100;
+				this.maxHp = 100;
+				
+				this.atk = 1;
+				this.def = 1;
+
+				this.x = 0;
+				this.y = 0;			
+				
+				this.pic = new Image();				
+			}
+			
+			move(moveX, moveY)
+			{
+				// check boundaries later
+				this.x += moveX;
+				this.y += moveY;
+				// redraw in render, not here				
+			}				
+		}
+		
+		class main
+		{
+			hero;
+			monsters = [];	
+			grid = [ 
+			['B', 'T', 'B', 'T', 'B', 'T', 'B', 'T', 'B', 'T'],
+			['B', 'H', 'B', 'G', 0, 0, 0, 0, 0, 'B'],
+			['B', 0, 'T', 'T', 0, 0, 0, 'B', 0, 'T'],
+			['T', 0, 0, 0, 0, 'T', 0, 0, 0, 'B'],
+			['B', 0, 0, 0, 0, 'B', 'V', 'B', 0, 'T'],
+			['T', 'B', 'T', 0, 0, 0, 0, 'T', 0, 'B'],
+			['B', 'S', 0, 0, 0, 0, 0, 0, 0, 'T'],
+			['T', 0, 0, 0, 0, 0, 0, 0, 0, 0] 			
+			];
+			canvasWidth;
+			canvasHeight;
+			
+			constructor()
+			{				
+				this.hero = new Hero();
+				
+				this.canvasWidth = document.getElementsByTagName("canvas")[0].width;
+				this.canvasHeight = document.getElementsByTagName("canvas")[0].height;				
+				
+				this.hero = new Hero();
+								
+				/*for(let i = 0; i < this.grid.length; i++)
+				{
+					for(let j = 0; j < this.grid[i].length; j++)
+					{
+						 cases:
+							create brick, tree entity with x and y, render, then break
+							create hero with x and y, render, then break
+							create monster with x and y, render, then breal
+							
+							override render method in character class										
+							
+						
+						switch(this.grid[i][j])
+						{
+							case 'B':
+								var brick = new Entity();
+								brick.render('B');
+								break;
+							case 'T':
+								break;
+							case 'H':
+								break;
+							case 'S':
+								break;
+							case 'V':
+								break;
+							case 'G':
+								break;
+								
+						}
+					}
+				}*/
+				
+				
+				// create grid of initial positions and obstacles
+				// then create function to place in grid, which sets position values
+				
+				// predetermined posititons for the 3 monsters
+				var treeMonster = new Monster();
+				treeMonster.x = 2;
+				treeMonster.y = 3;			
+				treeMonster.pic.src = "img/iceGolem.png";
+				
+				var snowMonster = new Monster();
+				snowMonster.x = 1;
+				snowMonster.y = 4;				
+				snowMonster.pic.src = "img/snowMonster.png";
+				
+				var skullMonster = new Monster();
+				skullMonster.x = 6;
+				skullMonster.y = 4;			
+				skullMonster.pic.src = "img/skullMonster.png";				
+								
+				this.monsters.push(treeMonster);
+				this.monsters.push(snowMonster);
+				this.monsters.push(skullMonster);
+				
+				this.initGrid();
+				
+				// make potions here later
+			}
+			
+			initGrid()
+			{
+				// approaches:
+					// place empty except for manual exceptions for obstacles, enemies, potions, and Hero
+					// only put non-empty things in 2d arr, then give them predetermined values
+					// make monsters, obstacles, potions, etc separately, then add them all to grid and iterate through to render
+					
+				// why is initial render not working?
+					
+				this.hero.x *= 64;
+				this.hero.y *= 64;				
+				this.hero.render();
+				
+				for(let i = 0; i < this.monsters.length; i++)
+				{
+					this.monsters[i].x *= 64;					
+					this.monsters[i].y *= 64;					
+					this.monsters[i].render();
+				}
+			}
+			
+			clearCanvas()
+			{
+				console.log("clearing");
+				context.clearRect(0, 0, canvas.width, canvas.height);
+			}
+			
+			setLineColor(color)
+			{
+				context.strokeStyle = color;
+			}
+			
+			setFillColor(color)
+			{
+				context.fillStyle = color;
+			}
+			
+			setLineWidth(width)
+			{
+				context.lineWidth = width;
+			}
+			
+			setLineCap(str)
+			{
+				// options are butt, round, square
+				context.lineCap = str;								
+			}
+			
+			setLineJoin(c)
+			{
+				switch(c)
+				{
+					case 0: 
+							context.lineJoin = "miter";
+							break;
+					case 1:
+							context.lineJoin = "round";
+							break;
+					case 2:
+							context.lineJoin = "bevel";
+							break;
+					default:
+							break;
+				}
+			}					
+			
+			drawLine(x1, y1, x2, y2)
+			{
+				this.setLineWidth(1);
+				this.setLineColor("#F00");
+				this.setLineCap(0);
+				
+				context.beginPath();
+				context.moveTo(x1,y1);
+				context.lineTo(x2,y2);
+				context.stroke();
+			}
+			
+			drawBrick(x, y)
+			{
+				this.setLineWidth(32);
+				this.setLineColor("#BC4A3C");
+				this.setLineCap(0);
+				
+				// should be 64x64 px
+				
+				context.beginPath();
+				context.moveTo(x*64, y*64);
+				context.lineTo(x*64 +64, y*64);
+				context.stroke();
+			}
+						
+			drawTree(x, y)
+			{
+				this.setLineWidth(12);				
+				this.setLineCap("round");
+										
+				// draw trunk
+				context.beginPath();
+				this.setLineColor("#a69f6c");
+				context.moveTo(x*64, y*64);
+				context.lineTo(x*64, y*64 - 32);
+				context.moveTo(x*64, y*64 - 32);
+				context.stroke();
+				
+				// draw leaves
+				context.beginPath();
+				this.setLineWidth(50);
+				this.setLineColor("#45ad57");						
+				context.lineTo(x*64, y*64 - 48);
+				context.moveTo(x*64, y*64 - 48);
+				context.stroke();				
+
+				// add tree to 2d arr here or in advance?
+			}			
+			
+			// why not working?
+			drawImages()
+			{								
+				this.hero.render();					
+				this.monsters[0].render();														
+			}									
+		}
+	</script>
+		
+	<canvas width=640 height=512 style="border: solid; border-color: black;">				
+	</canvas>			
+	
+	<script>	
+		var canvas = document.getElementsByTagName("canvas")[0];
+		var context = canvas.getContext("2d");		
+		var gameMain = new main();
+		
+		gameMain.drawBrick(5, 1);
+		gameMain.drawTree(5,5);
+		
+		gameMain.drawImages();				
+		
+		document.onkeydown = function(event)
+		{			
+			gameMain.clearCanvas();
+			
+			switch (event.keyCode) 
+			{
+				// left
+				case 37:					
+					gameMain.hero.update(-64, 0, 0);
+					gameMain.hero.render();									
+					break;
+				// up
+				case 38:									
+					gameMain.hero.update(0, -64, 0);
+					gameMain.hero.render();					
+					break;
+				// right
+				case 39:					
+					gameMain.hero.update(64, 0, 0);
+					gameMain.hero.render();									
+					break;
+				// down
+				case 40:							
+					gameMain.hero.move(0, 64, 0);
+					gameMain.hero.render();									
+					break;
+			}				
+						
+			for(let i = 0; i < gameMain.monsters.length; i++)
+			{
+				gameMain.monsters[i].update(0, 0, 0);				
+				gameMain.monsters[i].render();
+			}			
+		};
+	</script>
+</html>
+
