@@ -8,22 +8,7 @@
 			canvas object
 			context2D			
 			main
-			
-		Local variables for hero, enemies, potion, and environment in draw class:
-			Put predetermined number of enemies and potions into lists of the draw class. Their attribute will be accesible from the list.
-			Instantiate hero
-			
-			2d environment list with grid. 
-			Empty positions are 0
-			hero is H
-			golem is G
-			snowman is S
-			void is V
-			B is brick
-			T is tree. 
-			If not null, drawBrick at indexes for x, y
-			
-			put keydown function in draw class?
+		
 		
 		updaing enemy:
 			get list of adjacent tiles that don't have an obstacle or hero. isObstacle function?
@@ -35,50 +20,25 @@
 			same thing, but if hero moves to enemy (after enemy moves), maintain position and lower enemy health
 			
 			
-		when arrow key pressed, update and render hero, enemies, and potions (delete potions if hero moves to them). Don't forget hp bars
-		render both the hero/enemy and their health bar		
-		
-		draw grid lines later
+		when arrow key pressed, update and render hero, enemies, and potions (delete potions if hero moves to them). Don't forget hp bars				
 		
 		hierarchy:
-			Entity (brick, tree)
-				character
-					hero
-					monster							
+			Potion
+			Character
+				Hero
+				Snowman
+				Void
+				Golem
+				
+		MAKE TREES 64X64
+		FIX OBSTACLE ROW OFFSET
+		ADD ENEMY AI
+		ADD COMBAT
 -- >
 
 <!doctype html>
 <html>
-	<script>				
-		/*class Entity
-		{
-		
-			x;
-			y;	
-
-			constructor()
-			{
-				this.x = 0;
-				this.y = 0;
-			}			
-			
-			// assumes canvas cleared already 
-			// redraw entity at x, y
-			// then redraw hp bar
-						
-			render(type)
-			{								
-				if(type === 'B')
-				{
-					gameMain.drawBrick(this.x, this.y);
-				}
-				else if(type === 'T')
-				{
-					gameMain.drawTree(this.x, this.y);
-				}
-			}
-		}		*/	
-		
+	<script>						
 		class Character
 		{	
 			x;
@@ -102,7 +62,7 @@
 				this.atk = 1;
 				this.def = 1;
 
-				this.pic = new Image();
+				this.pic = new Image();				
 			}
 		
 			update(moveX, moveY, hpChange)
@@ -110,13 +70,7 @@
 				this.x += moveX;
 				this.y += moveY;
 				this.hp += hpChange;
-			}
-			
-			render()
-			{				
-				context.drawImage(this.pic, this.x, this.y, 64, 64);			
-			}
-			
+			}					
 		}
 		
 		class Hero extends Character
@@ -127,23 +81,105 @@
 				
 				this.pic = new Image();
 				this.pic.src = "img/hero.png";				
-			}						
+			}			
+
+			render()
+			{					
+				// onload code so image shows properly once page is opened
+				this.pic.onload = function()
+				{										
+					this.pic = new Image();
+					this.pic.src = "img/hero.png";				
+										
+					let position = gameMain.getGridPosition('H');										
+					context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);	
+				};
+								
+				context.drawImage(this.pic, this.x, this.y, 64, 64);		
+			}			
 		}
-				
-		class Monster extends Character
-		{					
+		
+		class Snowman extends Character
+		{
 			constructor()
-			{	
-				super();														
+			{
+				super();
 				
-				this.pic = new Image();				
-			}					
+				this.pic = new Image();
+				this.pic.src = "img/snowMonster.png";
+			}
+			
+			render()
+			{						
+				this.pic.onload = function()
+				{										
+					this.pic = new Image();	
+					this.pic.src = "img/snowMonster.png";		
+
+					let position = gameMain.getGridPosition('S');										
+					context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
+				};
+								
+				context.drawImage(this.pic, this.x, this.y, 64, 64);		
+			}
+		}
+		
+		class Golem extends Character
+		{
+			constructor()
+			{
+				super();
+				
+				this.pic = new Image();
+				this.pic.src = "img/iceGolem.png";
+			}
+			
+			render()
+			{						
+				this.pic.onload = function()
+				{										
+					this.pic = new Image();	
+					this.pic.src = "img/iceGolem.png";		
+
+					let position = gameMain.getGridPosition('G');					
+					context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
+				};
+								
+				context.drawImage(this.pic, this.x, this.y, 64, 64);		
+			}
+		}
+		
+		class Void extends Character
+		{
+			constructor()
+			{
+				super();
+				
+				this.pic = new Image();
+				this.pic.src = "img/skullMonster.png";
+			}
+			
+			render()
+			{						
+				this.pic.onload = function()
+				{										
+					this.pic = new Image();	
+					this.pic.src = "img/skullMonster.png";		
+
+					let position = gameMain.getGridPosition('V');									
+					context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
+				};
+				
+				console.log("rendering " + this.pic.src);
+				context.drawImage(this.pic, this.x, this.y, 64, 64);		
+			}
 		}
 		
 		class main
 		{
 			hero;
 			monsters = [];
+			potions = [];
 			grid = [ 
 			['B', 'T', 'B', 'T', 'B', 'T', 'B', 'T', 'B', 'T'],
 			['B', 'H', 'B', 'G', 0, 0, 0, 0, 0, 'B'],
@@ -151,78 +187,117 @@
 			['T', 0, 0, 0, 0, 'T', 0, 0, 0, 'B'],
 			['B', 0, 0, 0, 0, 'B', 'V', 'B', 0, 'T'],
 			['T', 'B', 'T', 0, 0, 0, 0, 'T', 0, 'B'],
-			['B', 'S', 0, 0, 0, 0, 0, 0, 0, 'T'],
-			['T', 0, 0, 0, 0, 0, 0, 0, 0, 0] 			
+			['B', 'S', 0, 0, 'P', 0, 0, 0, 0, 'T'],
+			['T', 0, 'T', 'B', 0, 0, 0, 0, 0, 0] 			
 			];
 			canvasWidth;
 			canvasHeight;
 			
 			constructor()
-			{				
-				this.hero = new Hero();
-				
+			{												
 				this.canvasWidth = document.getElementsByTagName("canvas")[0].width;
-				this.canvasHeight = document.getElementsByTagName("canvas")[0].height;											
-								
-				this.drawGrid();							
+				this.canvasHeight = document.getElementsByTagName("canvas")[0].height;																									
 			}
 			
-			drawGrid()
+			// returns x and y of first match to valueToFind
+			getGridPosition(valueToFind) 
+			{
+				for (let i = 0; i < this.grid.length; i++) 
+				{
+					for (let j = 0; j < this.grid[i].length; j++) 
+					{
+						if (this.grid[i][j] === valueToFind)
+							return { row: i, col: j };						
+					}
+				}				
+				return null;
+			}					
+			
+			initGrid()
 			{			
-				// make potions here later			
+				// why do potions and bricks overlap? obstacles are offset?									
+				// how to move hero and monsters
 				
 				for(let row = 0; row < this.grid.length; row++)
 				{
 					for(let col = 0; col < this.grid[row].length; col++)
 					{
-						 /*cases:
-							create brick, tree entity with x and y, render, then break
-							create hero with x and y, render, then break
-							create monster with x and y, render, then breal
-							
-							override render method in character class													
-						*/															
-						
 						switch(this.grid[row][col])
 						{							
 							case 'B':								
-								this.drawBrick(row, col);
+								this.drawBrick(col, row);
 								break;
 							case 'T':								
-								this.drawTree(row, col);
+								this.drawTree(col, row);
+								break;							
+							case 'P':
+								var potion = new Image();
+								potion.src = "img/potion.png";
+								context.drawImage(potion, col * 64, row * 64, 64, 64);
 								break;
-							case 'H':
-								var hero = new Hero();
-								hero.render();
+							case 'H':	
+								this.hero = new Hero();
+								this.hero.x = col * 64;
+								this.hero.y = row * 64;
+								this.hero.render();
 								break;
 							case 'S':
-								this.monsters.push(new Monster());
-								this.monsters[this.monsters.length-1].pic.src = "img/snowMonster.png";
-								this.monsters[this.monsters.length-1].render();
-								this.monsters[this.monsters.length-1].x = col * 64;
-								this.monsters[this.monsters.length-1].y = row * 64;								
+								this.monsters.push(new Snowman());									
+								this.monsters[(this.monsters.length-1)].pic.src = "img/snowMonster.png";								
+								this.monsters[(this.monsters.length-1)].x = col * 64;
+								this.monsters[(this.monsters.length-1)].y = row * 64;
+								this.monsters[(this.monsters.length-1)].render();																
 								break;
 							case 'V':
-								this.monsters.push(new Monster());
-								this.monsters[this.monsters.length-1].pic.src = "img/skullMonster.png";
-								this.monsters[this.monsters.length-1].render();
-								this.monsters[this.monsters.length-1].x = col * 64;
-								this.monsters[this.monsters.length-1].y = row * 64;
+								this.monsters.push(new Void());																
+								this.monsters[(this.monsters.length-1)].pic.src = "img/skullMonster.png";								
+								this.monsters[(this.monsters.length-1)].x = col * 64;
+								this.monsters[(this.monsters.length-1)].y = row * 64;
+								this.monsters[(this.monsters.length-1)].render();								
 								break;
 							case 'G':
-								this.monsters.push(new Monster());
-								this.monsters[this.monsters.length-1].pic.src = "img/iceGolem.png";
-								this.monsters[this.monsters.length-1].render();
-								this.monsters[this.monsters.length-1].x = col * 64;
-								this.monsters[this.monsters.length-1].y = row * 64;
-								break;								
+								this.monsters.push(new Golem());																
+								this.monsters[(this.monsters.length-1)].pic.src = "img/iceGolem.png";								
+								this.monsters[(this.monsters.length-1)].x = col * 64;
+								this.monsters[(this.monsters.length-1)].y = row * 64;
+								this.monsters[(this.monsters.length-1)].render();										
+								break;		
+								
+								// put in potions later
 						}
 					}
 				}								
 			}
 			
+			drawObstacles()
+			{
+				for(let row = 0; row < this.grid.length; row++)
+				{
+					for(let col = 0; col < this.grid[row].length; col++)
+					{
+						switch(this.grid[row][col])
+						{							
+							case 'B':								
+								this.drawBrick(col, row);
+								break;
+							case 'T':								
+								this.drawTree(col, row);
+								break;
+						}
+					}
+				}
+			}
+			
+			renderMonsters()
+			{
+				for(let i = 0; i < this.monsters.length; i++)				
+					this.monsters[i].render();
+														
+			}
+			
 			clearCanvas()
 			{				
+				console.log("clearing canvas");
 				context.clearRect(0, 0, canvas.width, canvas.height);
 			}
 			
@@ -281,14 +356,12 @@
 			{
 				this.setLineWidth(32);
 				this.setLineColor("#BC4A3C");
-				this.setLineCap("square");
-				
-				// should be 64x64 px
+				this.setLineCap("square");					
 				
 				context.beginPath();
-				context.moveTo(x*64, y*64);
-				context.lineTo(x*64 + 64, y*64);
-				context.stroke();
+				context.moveTo(x*64 + 20, y*64);
+				context.lineTo(x*64 + 44, y*64);
+				context.stroke();				
 			}
 						
 			drawTree(x, y)
@@ -310,17 +383,9 @@
 				this.setLineColor("#45ad57");						
 				context.lineTo(x*64 + 32, y*64 - 48);
 				context.moveTo(x*64 + 32, y*64 - 48);
-				context.stroke();				
-
+				context.stroke();						
 				// add tree to 2d arr here or in advance?
-			}
-			
-			// why not working?
-			drawImages()
-			{								
-				this.hero.render();					
-				this.monsters[0].render();														
-			}									
+			}											
 		}
 	</script>
 		
@@ -330,11 +395,15 @@
 	<script>	
 		var canvas = document.getElementsByTagName("canvas")[0];
 		var context = canvas.getContext("2d");		
-		var gameMain = new main();		
-		
-		/*
-		use drawGrid to initialize, then rely on update and render functions
-		*/
+		var gameMain = new main();	
+
+		window.onload = function()
+		{
+			gameMain.initGrid();
+			gameMain.drawObstacles();
+			gameMain.hero.render();
+			gameMain.renderMonsters();		
+		};
 		
 		document.onkeydown = function(event)
 		{			
@@ -344,34 +413,26 @@
 			{
 				// left
 				case 37:					
-					gameMain.hero.update(-64, 0, 0);
-					gameMain.hero.render();									
+					gameMain.hero.update(-64, 0, 0);					
 					break;
 				// up
 				case 38:									
-					gameMain.hero.update(0, -64, 0);
-					gameMain.hero.render();					
+					gameMain.hero.update(0, -64, 0);					
 					break;
 				// right
 				case 39:					
-					gameMain.hero.update(64, 0, 0);
-					gameMain.hero.render();									
+					gameMain.hero.update(64, 0, 0);			
 					break;
 				// down
 				case 40:							
-					gameMain.hero.update(0, 64, 0);
-					gameMain.hero.render();									
+					gameMain.hero.update(0, 64, 0);										
 					break;
-			}				
-			
-			gameMain.drawGrid();
-						
-			for(let i = 0; i < gameMain.monsters.length; i++)
-			{
-				gameMain.monsters[i].update(0, 0, 0);				
-				gameMain.monsters[i].render();
 			}			
-		};
+
+			gameMain.drawObstacles();
+			gameMain.hero.render();
+			gameMain.renderMonsters();									
+		};			
 	</script>
 </html>
 
