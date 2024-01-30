@@ -31,14 +31,10 @@
 					Snowman 
 					Void
 					Golem
-					
-		approaches to ai:
-			use conditionals in script to check tiles and call update when tile selected
-			change update in character to differentiate between hero and monster. if monster, get tiles
-			remove update from character and put different update function for hero and monster *
+							
 				
 		TODO:		
-			ENEMY AI
+			Fix enemies stacking and not moving left
 			POTIONS
 			COMBAT
 -- >
@@ -61,8 +57,8 @@
 			
 			constructor()
 			{							
-				this.x = 0;
-				this.y = 0;
+				this.x = 1;
+				this.y = 1;
 				
 				this.hp = 100;
 				this.maxHp = 100;
@@ -78,6 +74,9 @@
 			constructor()
 			{
 				super();	
+				
+				this.x = 1;
+				this.y = 1;
 				
 				this.pic = new Image();
 				this.pic.src = "img/hero.png";				
@@ -95,15 +94,42 @@
 					context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);	
 				};
 								
-				context.drawImage(this.pic, this.x, this.y, 64, 64);		
+				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
 			}			
 			
-			update(moveX, moveY, hpChange)
-			{
-				this.x += moveX;
-				this.y += moveY;
-				this.hp += hpChange;
-			}	
+			update(key)
+			{	
+				console.log("Before checking\nHero X: " + this.x + ", Hero Y: " + this.y);			
+				
+				
+				console.log("left is " + gameMain.grid[this.y][(this.x-1)]);
+				console.log("up is " + gameMain.grid[(this.y-1)][this.x]);
+				console.log("right is " + gameMain.grid[(this.y)][this.x+1]);
+				console.log("down is " + gameMain.grid[(this.y+1)][this.x]);
+				
+				// left
+				if(key == 37 && gameMain.grid[this.y][(this.x-1)] == 0)
+				{
+					this.x -= 1;
+				}
+				// up
+				else if(key == 38 && gameMain.grid[(this.y-1)][this.x] == 0)
+				{
+					this.y -= 1;
+				}
+				// right
+				else if(key == 39 && gameMain.grid[this.y][(this.x+1)] == 0)
+				{
+					this.x += 1;
+				}
+				// down
+				else if(key == 40 && gameMain.grid[(this.y+1)][this.x] == 0)
+				{
+					this.y += 1;
+				}
+				
+				//this.hp += hpChange;
+			}		
 		}
 		
 		class Monster extends Character
@@ -132,41 +158,39 @@
 			update()
 			{				
 				let adjTiles = [];
-								
-				console.log("x: " + this.x + ", y: " + this.y);
-				console.log("gameMain.grid[this.y][this.x]: " + gameMain.grid[this.y][this.x]);
+															
 				if(gameMain.grid[(this.y-1)][this.x] == 0)
 				{
 					adjTiles.push("top");
 				}				
-				else if(gameMain.grid[this.y][(this.x+1)] == 0)
+				if(gameMain.grid[this.y][(this.x+1)] == 0)
 				{
 					adjTiles.push("right");
 				}				
-				else if(gameMain.grid[(this.y+1)][this.x] == 0)
+				if(gameMain.grid[(this.y+1)][this.x] == 0)
 				{
 					adjTiles.push("bottom");
 				}				
-				else if(gameMain.grid[this.y][(this.x-1)] == 0)
+				if(gameMain.grid[this.y][(this.x-1)] == 0)
 				{
 					adjTiles.push("left");
 				}
-							
+											
 				let randIndx = this.getRandomInt(adjTiles.length);
 				
-				switch(adjTiles(randIndx))
+				switch(adjTiles[randIndx])
 				{
 					case "top":
-						this.y -= 64;
+						this.y -= 1;
 						break;
 					case "right":
-						this.x += 64;
+						this.x += 1;
 						break;
 					case "bottom":
-						this.y += 64;
+						this.y += 1;
 						break;
 					case "left":
-						this.x -= 64;
+						this.x -= 1;						
 						break;
 				}							
 			}
@@ -177,6 +201,9 @@
 			constructor()
 			{
 				super();
+				
+				this.x = 1;
+				this.y = 6;
 				
 				this.pic = new Image();
 				this.pic.src = "img/snowMonster.png";
@@ -189,8 +216,9 @@
 					this.pic = new Image();	
 					this.pic.src = "img/snowMonster.png";		
 
-					let position = gameMain.getGridPosition('S');										
-					context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
+					//let position = gameMain.getGridPosition('S');										
+					//context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
+					context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
 				};
 								
 				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
@@ -203,6 +231,9 @@
 			{
 				super();
 				
+				this.x = 3;
+				this.y = 1;
+				
 				this.pic = new Image();
 				this.pic.src = "img/iceGolem.png";
 			}
@@ -214,11 +245,12 @@
 					this.pic = new Image();	
 					this.pic.src = "img/iceGolem.png";		
 
-					let position = gameMain.getGridPosition('G');					
-					context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
+					//let position = gameMain.getGridPosition('G');					
+					//context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
+					context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
 				};
 								
-				context.drawImage(this.pic, this.x, this.y, 64, 64);		
+				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
 			}
 		}
 		
@@ -227,6 +259,9 @@
 			constructor()
 			{
 				super();
+				
+				this.x = 7;
+				this.y = 3;
 				
 				this.pic = new Image();
 				this.pic.src = "img/skullMonster.png";
@@ -239,11 +274,12 @@
 					this.pic = new Image();	
 					this.pic.src = "img/skullMonster.png";		
 
-					let position = gameMain.getGridPosition('V');									
-					context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
+					//let position = gameMain.getGridPosition('V');									
+					//context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
+					context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
 				};
 								
-				context.drawImage(this.pic, this.x, this.y, 64, 64);		
+				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
 			}
 		}
 		
@@ -254,19 +290,24 @@
 			potions = [];
 			grid = [ 
 			['B', 'T', 'B', 'T', 'B', 'T', 'B', 'T', 'B', 'T'],
-			['B', 'H', 'B', 'G', 0, 0, 0, 0, 0, 'B'],
+			['B', 0, 'B', 0, 0, 0, 0, 0, 0, 'B'],
 			['B', 0, 'T', 'T', 0, 0, 0, 'B', 0, 'T'],
 			['T', 0, 0, 0, 0, 'T', 0, 0, 0, 'B'],
-			['B', 0, 0, 0, 0, 'B', 'V', 'B', 0, 'T'],
+			['B', 0, 0, 0, 0, 'B', 0, 'B', 0, 'T'],
 			['T', 'B', 'T', 0, 0, 0, 0, 'T', 0, 'B'],
-			['B', 'S', 0, 0, 'P', 0, 0, 0, 0, 'T'],
+			['B', 0, 0, 0, 0, 0, 0, 0, 0, 'T'],
 			['T', 'B', 'T', 'B', 'T', 'B', 'T', 'B', 'T', 'B'] 			
 			];
 			canvasWidth;
 			canvasHeight;
 			
 			constructor()
-			{												
+			{						
+				this.hero = new Hero();
+				this.monsters.push(new Snowman());
+				this.monsters.push(new Golem());
+				this.monsters.push(new Void());
+				
 				this.canvasWidth = document.getElementsByTagName("canvas")[0].width;
 				this.canvasHeight = document.getElementsByTagName("canvas")[0].height;																									
 			}
@@ -309,29 +350,29 @@
 								break;
 							case 'H':	
 								this.hero = new Hero();
-								this.hero.x = col * 64;
-								this.hero.y = row * 64;
+								this.hero.x = col;
+								this.hero.y = row;
 								this.hero.render();
 								break;
 							case 'S':
 								this.monsters.push(new Snowman());									
 								this.monsters[(this.monsters.length-1)].pic.src = "img/snowMonster.png";								
-								this.monsters[(this.monsters.length-1)].x = col * 64;
-								this.monsters[(this.monsters.length-1)].y = row * 64;
+								this.monsters[(this.monsters.length-1)].x = col;
+								this.monsters[(this.monsters.length-1)].y = row;
 								this.monsters[(this.monsters.length-1)].render();																
 								break;
 							case 'V':
 								this.monsters.push(new Void());																
 								this.monsters[(this.monsters.length-1)].pic.src = "img/skullMonster.png";								
-								this.monsters[(this.monsters.length-1)].x = col * 64;
-								this.monsters[(this.monsters.length-1)].y = row * 64;
+								this.monsters[(this.monsters.length-1)].x = col;
+								this.monsters[(this.monsters.length-1)].y = row;
 								this.monsters[(this.monsters.length-1)].render();								
 								break;
 							case 'G':
 								this.monsters.push(new Golem());																
 								this.monsters[(this.monsters.length-1)].pic.src = "img/iceGolem.png";								
-								this.monsters[(this.monsters.length-1)].x = col * 64;
-								this.monsters[(this.monsters.length-1)].y = row * 64;
+								this.monsters[(this.monsters.length-1)].x = col;
+								this.monsters[(this.monsters.length-1)].y = row;
 								this.monsters[(this.monsters.length-1)].render();										
 								break;		
 								
@@ -501,28 +542,30 @@
 			gameMain.clearCanvas();
 			gameMain.drawBackground();
 			
-			switch (event.keyCode) 
+			gameMain.hero.update(event.keyCode);
+			gameMain.hero.render();
+			
+			/*switch (event.keyCode) 
 			{
 				// left
 				case 37:					
-					gameMain.hero.update(-64, 0, 0);					
+					gameMain.hero.update(-1, 0, 0);					
 					break;
 				// up
 				case 38:									
-					gameMain.hero.update(0, -64, 0);					
+					gameMain.hero.update(0, -1, 0);					
 					break;
 				// right
 				case 39:					
-					gameMain.hero.update(64, 0, 0);			
+					gameMain.hero.update(1, 0, 0);			
 					break;
 				// down
 				case 40:							
-					gameMain.hero.update(0, 64, 0);										
+					gameMain.hero.update(0, 1, 0);										
 					break;
-			}			
+			}*/			
 
-			gameMain.drawObstacles();
-			gameMain.hero.render();
+			gameMain.drawObstacles();			
 			gameMain.updateMonsters();
 			gameMain.renderMonsters();									
 		};			
