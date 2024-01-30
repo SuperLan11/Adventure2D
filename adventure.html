@@ -9,7 +9,6 @@
 			context2D			
 			main
 		
-		
 		updaing enemy:
 			get list of adjacent tiles that don't have an obstacle or hero. isObstacle function?
 			randomly pick an adjacent tile from the list
@@ -26,14 +25,22 @@
 			Potion
 			Character
 				Hero
-				Snowman
-				Void
-				Golem
+				// for move
+				Monster
+					// for renders
+					Snowman 
+					Void
+					Golem
+					
+		approaches to ai:
+			use conditionals in script to check tiles and call update when tile selected
+			change update in character to differentiate between hero and monster. if monster, get tiles
+			remove update from character and put different update function for hero and monster *
 				
-		MAKE TREES 64X64
-		FIX OBSTACLE ROW OFFSET
-		ADD ENEMY AI
-		ADD COMBAT
+		TODO:		
+			ENEMY AI
+			POTIONS
+			COMBAT
 -- >
 
 <!doctype html>
@@ -63,14 +70,7 @@
 				this.def = 1;
 
 				this.pic = new Image();				
-			}
-		
-			update(moveX, moveY, hpChange)
-			{
-				this.x += moveX;
-				this.y += moveY;
-				this.hp += hpChange;
-			}					
+			}				
 		}
 		
 		class Hero extends Character
@@ -97,9 +97,82 @@
 								
 				context.drawImage(this.pic, this.x, this.y, 64, 64);		
 			}			
+			
+			update(moveX, moveY, hpChange)
+			{
+				this.x += moveX;
+				this.y += moveY;
+				this.hp += hpChange;
+			}	
 		}
 		
-		class Snowman extends Character
+		class Monster extends Character
+		{
+			constructor()
+			{
+				super();
+				
+				this.x = 0;
+				this.y = 0;
+				
+				this.hp = 0;
+				this.maxHp = 0;
+				
+				this.atk = 0;
+				this.def = 0;
+				
+				this.pic = 0;
+			}
+			
+			getRandomInt(max)
+			{	
+				return Math.floor(Math.random()*(max+1));
+			}
+			
+			update()
+			{				
+				let adjTiles = [];
+								
+				console.log("x: " + this.x + ", y: " + this.y);
+				console.log("gameMain.grid[this.y][this.x]: " + gameMain.grid[this.y][this.x]);
+				if(gameMain.grid[(this.y-1)][this.x] == 0)
+				{
+					adjTiles.push("top");
+				}				
+				else if(gameMain.grid[this.y][(this.x+1)] == 0)
+				{
+					adjTiles.push("right");
+				}				
+				else if(gameMain.grid[(this.y+1)][this.x] == 0)
+				{
+					adjTiles.push("bottom");
+				}				
+				else if(gameMain.grid[this.y][(this.x-1)] == 0)
+				{
+					adjTiles.push("left");
+				}
+							
+				let randIndx = this.getRandomInt(adjTiles.length);
+				
+				switch(adjTiles(randIndx))
+				{
+					case "top":
+						this.y -= 64;
+						break;
+					case "right":
+						this.x += 64;
+						break;
+					case "bottom":
+						this.y += 64;
+						break;
+					case "left":
+						this.x -= 64;
+						break;
+				}							
+			}
+		}
+		
+		class Snowman extends Monster
 		{
 			constructor()
 			{
@@ -120,11 +193,11 @@
 					context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
 				};
 								
-				context.drawImage(this.pic, this.x, this.y, 64, 64);		
+				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
 			}
 		}
 		
-		class Golem extends Character
+		class Golem extends Monster
 		{
 			constructor()
 			{
@@ -149,7 +222,7 @@
 			}
 		}
 		
-		class Void extends Character
+		class Void extends Monster
 		{
 			constructor()
 			{
@@ -169,8 +242,7 @@
 					let position = gameMain.getGridPosition('V');									
 					context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
 				};
-				
-				console.log("rendering " + this.pic.src);
+								
 				context.drawImage(this.pic, this.x, this.y, 64, 64);		
 			}
 		}
@@ -188,7 +260,7 @@
 			['B', 0, 0, 0, 0, 'B', 'V', 'B', 0, 'T'],
 			['T', 'B', 'T', 0, 0, 0, 0, 'T', 0, 'B'],
 			['B', 'S', 0, 0, 'P', 0, 0, 0, 0, 'T'],
-			['T', 0, 'T', 'B', 0, 0, 0, 0, 0, 0] 			
+			['T', 'B', 'T', 'B', 'T', 'B', 'T', 'B', 'T', 'B'] 			
 			];
 			canvasWidth;
 			canvasHeight;
@@ -215,7 +287,7 @@
 			
 			initGrid()
 			{			
-				// why do potions and bricks overlap? obstacles are offset?									
+				// why do potions and bricks overlap?
 				// how to move hero and monsters
 				
 				for(let row = 0; row < this.grid.length; row++)
@@ -269,6 +341,18 @@
 				}								
 			}
 			
+			drawBackground()
+			{
+				this.setLineWidth(1000);
+				this.setLineColor("#eef0bd");
+				this.setLineCap(0);
+				
+				context.beginPath();
+				context.moveTo(this.canvasWidth/2, this.canvasHeight/2);
+				context.lineTo((this.canvasWidth/2)+1, (this.canvasHeight/2)+1);
+				context.stroke();
+			}
+			
 			drawObstacles()
 			{
 				for(let row = 0; row < this.grid.length; row++)
@@ -286,6 +370,12 @@
 						}
 					}
 				}
+			}
+			
+			updateMonsters()
+			{
+				for(let i = 0; i < this.monsters.length; i++)				
+					this.monsters[i].update();
 			}
 			
 			renderMonsters()
@@ -359,30 +449,30 @@
 				this.setLineCap("square");					
 				
 				context.beginPath();
-				context.moveTo(x*64 + 20, y*64);
-				context.lineTo(x*64 + 44, y*64);
+				context.moveTo(x*64 + 20, (y+1)*64 - 22);
+				context.lineTo(x*64 + 44, (y+1)*64 - 22);
 				context.stroke();				
 			}
 						
 			drawTree(x, y)
 			{
-				this.setLineWidth(12);				
+				this.setLineWidth(10);				
 				this.setLineCap("round");
 										
 				// draw trunk
 				context.beginPath();
 				this.setLineColor("#a69f6c");
-				context.moveTo(x*64 + 32, y*64);
-				context.lineTo(x*64 + 32, y*64 - 32);
-				context.moveTo(x*64 + 32, y*64 - 32);
+				context.moveTo(x*64 + 32, (y+1)*64);
+				context.lineTo(x*64 + 32, (y+1)*64 - 22);
+				context.moveTo(x*64 + 32, (y+1)*64 - 22);
 				context.stroke();
 				
 				// draw leaves
 				context.beginPath();
-				this.setLineWidth(50);
+				this.setLineWidth(45);
 				this.setLineColor("#45ad57");						
-				context.lineTo(x*64 + 32, y*64 - 48);
-				context.moveTo(x*64 + 32, y*64 - 48);
+				context.lineTo(x*64 + 32, (y+1)*64 - 42);
+				context.moveTo(x*64 + 32, (y+1)*64 - 42);
 				context.stroke();						
 				// add tree to 2d arr here or in advance?
 			}											
@@ -400,14 +490,16 @@
 		window.onload = function()
 		{
 			gameMain.initGrid();
+			gameMain.drawBackground();
 			gameMain.drawObstacles();
 			gameMain.hero.render();
-			gameMain.renderMonsters();		
+			gameMain.renderMonsters();					
 		};
 		
 		document.onkeydown = function(event)
 		{			
 			gameMain.clearCanvas();
+			gameMain.drawBackground();
 			
 			switch (event.keyCode) 
 			{
@@ -431,6 +523,7 @@
 
 			gameMain.drawObstacles();
 			gameMain.hero.render();
+			gameMain.updateMonsters();
 			gameMain.renderMonsters();									
 		};			
 	</script>
