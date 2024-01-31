@@ -116,10 +116,14 @@
 			{					
 				// will character still exist on grid after death?
 				if(this.hp > 0)
-				{
+				{					
 					context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);	
-					this.drawHealth();				
+					this.drawHealth();
 				}
+				else if(this.pic.src = "img/hero.png")
+				{
+					gameMain.gameLost = true;
+				}							
 			}
 		}
 		
@@ -392,6 +396,8 @@
 			['T', 'B', 'T', 'B', 'T', 'B', 'T', 'B', 'T', 'B'] 			
 			];
 			gameWon;
+			gameLost;
+			
 			canvasWidth;
 			canvasHeight;
 			
@@ -411,6 +417,7 @@
 				this.potions[1].y = 1;
 				
 				this.gameWon = false;
+				this.gameLost = false;
 				
 				this.canvasWidth = document.getElementsByTagName("canvas")[0].width;
 				this.canvasHeight = document.getElementsByTagName("canvas")[0].height;																									
@@ -631,6 +638,18 @@
 				var message = 'You win!';
 				context.fillText(message, xOffset, this.canvasHeight/2 + 20);
 			}
+			
+			drawLoseScreen()
+			{
+				let fontSize = 110;
+				context.font = fontSize + 'px Arial';
+				context.fillStyle = 'black';						
+				
+				let xOffset = this.canvasWidth/(fontSize/7);
+				
+				var message = 'Game Over';
+				context.fillText(message, xOffset, this.canvasHeight/2 + 20);
+			}
 		}
 	</script>
 		
@@ -648,18 +667,16 @@
 			gameMain.drawObstacles();
 			
 			gameMain.hero.render();
-			
 			gameMain.renderMonsters();	
-			
 			gameMain.renderPotions();
 		};
 		
 		document.onkeydown = function(event)
 		{										
 			gameMain.clearCanvas();					
-			gameMain.drawBackground();				
+			gameMain.drawBackground();					
 			
-			if(!gameMain.gameWon)			
+			if(!gameMain.gameWon && !gameMain.gameLost)			
 			{
 				gameMain.drawObstacles();
 
@@ -672,7 +689,7 @@
 				gameMain.renderPotions();		
 			}
 			
-			if(gameMain.gameWon)	
+			if(gameMain.gameWon || gameMain.gameLost)			
 			{
 				gameMain.clearCanvas();					
 				gameMain.drawBackground();
@@ -681,9 +698,16 @@
 				gameMain.hero.render();	
 				gameMain.renderMonsters();	
 				gameMain.renderPotions();	
-				
-				gameMain.drawWinScreen();			
-			}
+			
+				if(gameMain.gameWon)			
+				{
+					gameMain.drawWinScreen();
+				}			
+				else
+				{
+					gameMain.drawLoseScreen();			
+				}
+			}			
 		};			
 	</script>
 </html>
