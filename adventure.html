@@ -37,8 +37,8 @@
 			hero updates and renders before enemies
 				
 		TODO:		
-			COMBAT		
-			POTIONS		
+			Fix player taking damage at weird times
+			Delete hero if dead						
 			DRAW GRID AND SHRINK IMAGES
 -- >
 
@@ -66,12 +66,23 @@
 
 			drawHealth()
 			{
-				gameMain.setLineWidth(5);
-				gameMain.setLineColor("#0F0");
+				gameMain.setLineWidth(5);				
 				gameMain.setLineCap("butt");
 				
-				let hpPercent = this.hp/this.maxHp;								
-				// change color with hp percent?
+				let hpPercent = this.hp/this.maxHp;		
+
+				if(hpPercent > 0.6)
+				{
+					gameMain.setLineColor("#0F0");
+				}
+				else if(hpPercent > 0.25)
+				{
+					gameMain.setLineColor("#FF0");
+				}
+				else if(hpPercent > 0)
+				{
+					gameMain.setLineColor("#F00");
+				}				
 				
 				context.beginPath();
 				context.moveTo(64 * this.x + 12, 64 * this.y + 4);
@@ -92,12 +103,22 @@
 				
 				character.hp -= damage;
 				if(character.hp <= 0)				
-				{						
+				{								
 					// delete monster if dead
 					gameMain.monsters = gameMain.monsters.filter(function(value) 
 					{
 						return value !== character;
 					});
+				}
+			}
+			
+			render()
+			{					
+				// will character still exist on grid after death?
+				if(this.hp > 0)
+				{
+					context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);	
+					this.drawHealth();				
 				}
 			}
 		}
@@ -111,11 +132,11 @@
 				this.x = 1;
 				this.y = 1;
 				
-				this.hp = 200;
-				this.maxHp = 200;
+				this.hp = 100;
+				this.maxHp = 100;
 				
 				this.atk = 6;
-				this.def = 4;
+				this.def = 3;
 				
 				this.pic = new Image();
 				this.pic.src = "img/hero.png";				
@@ -170,17 +191,29 @@
 					{
 						this.y += 1;
 					}
+				}				
+
+				if(gameMain.tileHasPotion(this.x, this.y))
+				{
+					let potion = gameMain.getPotion(this.x, this.y);
+					
+					// add health up to max
+					if(this.hp + Potion.hpBoost > this.maxHp)	
+					{						
+						this.hp = this.maxHp;
+					}
+					else
+					{					
+						this.hp += Potion.hpBoost;
+					}
+						
+					// delete potion										
+					gameMain.potions = gameMain.potions.filter(function(value) 
+					{
+						return value !== potion;
+					});
 				}
-				
-				//this.hp += hpChange;
-			}		
-			
-			render()
-			{					
-				// onload code so image shows properly once page is opened				
-				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
-				this.drawHealth();
-			}		
+			}					
 		}
 		
 		class Monster extends Character
@@ -257,7 +290,8 @@
 						this.x -= 1;						
 						break;
 					case "hero":
-						// attack
+						this.attack(gameMain.hero);
+						break;
 				}							
 			}
 		}
@@ -279,21 +313,7 @@
 				
 				this.pic = new Image();
 				this.pic.src = "img/snowMonster.png";
-			}
-			
-			render()
-			{						
-				this.pic.onload = function()
-				{										
-					this.pic = new Image();	
-					this.pic.src = "img/snowMonster.png";		
-
-					context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
-				};
-								
-				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
-				this.drawHealth();
-			}
+			}			
 		}
 		
 		class Golem extends Monster
@@ -305,29 +325,15 @@
 				this.x = 3;
 				this.y = 1;
 				
-				this.hp = 150;
-				this.maxHp = 150;
+				this.hp = 100;
+				this.maxHp = 100;
 				
-				this.atk = 2;
+				this.atk = 3;
 				this.def = 4;		
 				
 				this.pic = new Image();
 				this.pic.src = "img/iceGolem.png";
-			}
-			
-			render()
-			{						
-				this.pic.onload = function()
-				{										
-					this.pic = new Image();	
-					this.pic.src = "img/iceGolem.png";		
-					
-					context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
-				};
-								
-				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
-				this.drawHealth();
-			}
+			}			
 		}
 		
 		class Void extends Monster
@@ -343,24 +349,30 @@
 				this.maxHp = 80;
 				
 				this.atk = 5;
-				this.def = 1;		
+				this.def = 2;		
 				
 				this.pic = new Image();
 				this.pic.src = "img/skullMonster.png";
+			}			
+		}
+		
+		class Potion
+		{
+			x;
+			y;
+			static hpBoost = 50;
+			
+			pic;
+			
+			constructor()
+			{				
+				this.pic = new Image();
+				this.pic.src = "img/potion.png";
 			}
 			
 			render()
-			{						
-				this.pic.onload = function()
-				{										
-					this.pic = new Image();	
-					this.pic.src = "img/skullMonster.png";		
-					
-					context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
-				};
-								
-				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);	
-				this.drawHealth();				
+			{							
+				context.drawImage(this.pic, 64 * this.x + 10, 64 * this.y + 16, 44, 44);												
 			}
 		}
 		
@@ -379,6 +391,7 @@
 			['B', 0, 0, 0, 0, 0, 0, 0, 0, 'T'],
 			['T', 'B', 'T', 'B', 'T', 'B', 'T', 'B', 'T', 'B'] 			
 			];
+			gameWon;
 			canvasWidth;
 			canvasHeight;
 			
@@ -388,6 +401,16 @@
 				this.monsters.push(new Snowman());
 				this.monsters.push(new Golem());
 				this.monsters.push(new Void());
+				
+				this.potions.push(new Potion());
+				this.potions[0].x = 8;
+				this.potions[0].y = 6;
+				
+				this.potions.push(new Potion());
+				this.potions[1].x = 5;
+				this.potions[1].y = 1;
+				
+				this.gameWon = false;
 				
 				this.canvasWidth = document.getElementsByTagName("canvas")[0].width;
 				this.canvasHeight = document.getElementsByTagName("canvas")[0].height;																									
@@ -405,63 +428,7 @@
 					}
 				}				
 				return null;
-			}					
-			
-			initGrid()
-			{			
-				// why do potions and bricks overlap?
-				// how to move hero and monsters
-				
-				for(let row = 0; row < this.grid.length; row++)
-				{
-					for(let col = 0; col < this.grid[row].length; col++)
-					{
-						switch(this.grid[row][col])
-						{							
-							case 'B':								
-								this.drawBrick(col, row);
-								break;
-							case 'T':								
-								this.drawTree(col, row);
-								break;							
-							case 'P':
-								var potion = new Image();
-								potion.src = "img/potion.png";
-								context.drawImage(potion, col * 64, row * 64, 64, 64);
-								break;
-							case 'H':	
-								this.hero = new Hero();
-								this.hero.x = col;
-								this.hero.y = row;
-								this.hero.render();
-								break;
-							case 'S':
-								this.monsters.push(new Snowman());									
-								this.monsters[(this.monsters.length-1)].pic.src = "img/snowMonster.png";								
-								this.monsters[(this.monsters.length-1)].x = col;
-								this.monsters[(this.monsters.length-1)].y = row;
-								this.monsters[(this.monsters.length-1)].render();																
-								break;
-							case 'V':
-								this.monsters.push(new Void());																
-								this.monsters[(this.monsters.length-1)].pic.src = "img/skullMonster.png";								
-								this.monsters[(this.monsters.length-1)].x = col;
-								this.monsters[(this.monsters.length-1)].y = row;
-								this.monsters[(this.monsters.length-1)].render();								
-								break;
-							case 'G':
-								this.monsters.push(new Golem());																
-								this.monsters[(this.monsters.length-1)].pic.src = "img/iceGolem.png";								
-								this.monsters[(this.monsters.length-1)].x = col;
-								this.monsters[(this.monsters.length-1)].y = row;
-								this.monsters[(this.monsters.length-1)].render();										
-								break;		
-								
-								// put in potions later
-						}
-					}
-				}								
-			}
+			}							
 				
 			getCharacter(x, y)
 			{
@@ -475,6 +442,17 @@
 				}
 				
 				return "character not found";
+			}
+			
+			getPotion(x, y)
+			{
+				for(let i = 0; i < this.potions.length; i++)
+				{
+					if(this.potions[i].x == x && this.potions[i].y == y)
+						return this.potions[i];
+				}
+				
+				return "potion not found";
 			}
 			
 			drawBackground()
@@ -507,20 +485,7 @@
 					}
 				}
 			}
-			
-			tileHasObstacle(x, y)
-			{
-				for(let i = 0; i < this.grid.length; i++)
-				{
-					for(let j = 0; j < this.grid[i].length; j++)
-					{
-						if(this.grid[i][j] == 'B' || this.grid[i][j] == 'T')
-							return true;
-					}					
-				}
-				return false;
-			}
-			
+
 			tileHasCharacter(x, y)
 			{
 				for(let i = 0; i < this.monsters.length; i++)
@@ -533,22 +498,39 @@
 				return false;
 			}
 			
+			tileHasPotion(x, y)
+			{
+				for(let i = 0; i < this.potions.length; i++)
+				{
+					if(this.potions[i].x == x && this.potions[i].y == y)
+						return true;
+				}
+				return false;
+			}
+			
 			updateMonsters()
 			{
 				for(let i = 0; i < this.monsters.length; i++)				
 					this.monsters[i].update();
-			}
+					
+				if(this.monsters.length == 0)
+					this.gameWon = true;
+			}	
 			
 			renderMonsters()
 			{
 				for(let i = 0; i < this.monsters.length; i++)				
 					this.monsters[i].render();
-														
+			}
+			
+			renderPotions()
+			{
+				for(let i = 0; i < this.potions.length; i++)				
+					this.potions[i].render();			
 			}
 			
 			clearCanvas()
-			{				
-				console.log("clearing canvas");
+			{								
 				context.clearRect(0, 0, canvas.width, canvas.height);
 			}
 			
@@ -636,7 +618,19 @@
 				context.moveTo(x*64 + 32, (y+1)*64 - 42);
 				context.stroke();						
 				// add tree to 2d arr here or in advance?
-			}											
+			}				
+
+			drawWinScreen()
+			{				
+				let fontSize = 110;
+				context.font = fontSize + 'px Arial';
+				context.fillStyle = 'black';						
+				
+				let xOffset = this.canvasWidth/(fontSize/18);
+				
+				var message = 'You win!';
+				context.fillText(message, xOffset, this.canvasHeight/2 + 20);
+			}
 		}
 	</script>
 		
@@ -646,29 +640,50 @@
 	<script>	
 		var canvas = document.getElementsByTagName("canvas")[0];
 		var context = canvas.getContext("2d");		
-		var gameMain = new main();	
+		var gameMain = new main();				
 
 		window.onload = function()
-		{
-			gameMain.initGrid();
+		{			
 			gameMain.drawBackground();
 			gameMain.drawObstacles();
 			
 			gameMain.hero.render();
-			gameMain.renderMonsters();					
+			
+			gameMain.renderMonsters();	
+			
+			gameMain.renderPotions();
 		};
 		
 		document.onkeydown = function(event)
-		{			
-			gameMain.clearCanvas();
+		{										
+			gameMain.clearCanvas();					
 			gameMain.drawBackground();				
-			gameMain.drawObstacles();
-
-			gameMain.hero.update(event.keyCode);
-			gameMain.hero.render();		
 			
-			gameMain.updateMonsters();
-			gameMain.renderMonsters();									
+			if(!gameMain.gameWon)			
+			{
+				gameMain.drawObstacles();
+
+				gameMain.hero.update(event.keyCode);
+				gameMain.hero.render();		
+				
+				gameMain.updateMonsters();
+				gameMain.renderMonsters();	
+				
+				gameMain.renderPotions();		
+			}
+			
+			if(gameMain.gameWon)	
+			{
+				gameMain.clearCanvas();					
+				gameMain.drawBackground();
+				gameMain.drawObstacles();
+				
+				gameMain.hero.render();	
+				gameMain.renderMonsters();	
+				gameMain.renderPotions();	
+				
+				gameMain.drawWinScreen();			
+			}
 		};			
 	</script>
 </html>
