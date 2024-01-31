@@ -7,19 +7,11 @@
 		only global variables for:
 			canvas object
 			context2D			
-			main
-		
-		updaing enemy:
-			get list of adjacent tiles that don't have an obstacle or hero. isObstacle function?
-			randomly pick an adjacent tile from the list
-			call move function that incremenets/decrements position based on what tile was chosen
-			update and render enemy
+			main		
 			
 		update hero:
 			same thing, but if hero moves to enemy (after enemy moves), maintain position and lower enemy health
-			
-			
-		when arrow key pressed, update and render hero, enemies, and potions (delete potions if hero moves to them). Don't forget hp bars				
+									
 		
 		hierarchy:
 			Potion
@@ -32,11 +24,22 @@
 					Void
 					Golem
 							
+		Combat stuff:
+			if hero and enemy move to same tile, enemy stays and both attack
+			if hero and enemy both move and are adjacent after, both attack
+			if enemy moves into obstacle and hero moves beside enemy, hero attack. vice versa for hero
+			if enemy and hero both move into each other, both attack
+			if enemy moves away from hero and hero chases enemy, hero attack
+			
+			enemy should stay still if hero moves to same tile
+			enemy should stay still if hero and enemy move to each other
+			
+			hero updates and renders before enemies
 				
 		TODO:		
-			Fix enemies stacking and not moving left
-			POTIONS
-			COMBAT
+			COMBAT		
+			POTIONS		
+			DRAW GRID AND SHRINK IMAGES
 -- >
 
 <!doctype html>
@@ -51,26 +54,56 @@
 			maxHp;
 			
 			atk;
-			def;
-			
+			def;			
+
 			pic;
 			
 			constructor()
 			{							
 				this.x = 1;
-				this.y = 1;
-				
-				this.hp = 100;
-				this.maxHp = 100;
-				this.atk = 1;
-				this.def = 1;
+				this.y = 1;								
+			}			
 
-				this.pic = new Image();				
-			}				
+			drawHealth()
+			{
+				gameMain.setLineWidth(5);
+				gameMain.setLineColor("#0F0");
+				gameMain.setLineCap("butt");
+				
+				let hpPercent = this.hp/this.maxHp;								
+				// change color with hp percent?
+				
+				context.beginPath();
+				context.moveTo(64 * this.x + 12, 64 * this.y + 4);
+				context.lineTo(64 * this.x + 12 + 40*hpPercent, 64 * this.y + 4);
+				context.stroke();
+			}
+			
+			getRandomInt(max)
+			{	
+				return Math.floor(Math.random()*(max+1));
+			}		
+			
+			attack(character)
+			{						
+				let statDiff = this.atk - character.def;
+				let max = Math.max(1, statDiff);
+				let damage = max*(1 + this.getRandomInt(5));
+				
+				character.hp -= damage;
+				if(character.hp <= 0)				
+				{						
+					// delete monster if dead
+					gameMain.monsters = gameMain.monsters.filter(function(value) 
+					{
+						return value !== character;
+					});
+				}
+			}
 		}
 		
 		class Hero extends Character
-		{					
+		{			
 			constructor()
 			{
 				super();	
@@ -78,57 +111,75 @@
 				this.x = 1;
 				this.y = 1;
 				
+				this.hp = 200;
+				this.maxHp = 200;
+				
+				this.atk = 6;
+				this.def = 4;
+				
 				this.pic = new Image();
 				this.pic.src = "img/hero.png";				
-			}			
-
-			render()
-			{					
-				// onload code so image shows properly once page is opened
-				this.pic.onload = function()
-				{										
-					this.pic = new Image();
-					this.pic.src = "img/hero.png";				
-										
-					let position = gameMain.getGridPosition('H');										
-					context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);	
-				};
-								
-				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
 			}			
 			
 			update(key)
 			{	
-				console.log("Before checking\nHero X: " + this.x + ", Hero Y: " + this.y);			
-				
-				
-				console.log("left is " + gameMain.grid[this.y][(this.x-1)]);
-				console.log("up is " + gameMain.grid[(this.y-1)][this.x]);
-				console.log("right is " + gameMain.grid[(this.y)][this.x+1]);
-				console.log("down is " + gameMain.grid[(this.y+1)][this.x]);
-				
 				// left
 				if(key == 37 && gameMain.grid[this.y][(this.x-1)] == 0)
 				{
-					this.x -= 1;
+					if(gameMain.tileHasCharacter(this.x-1, this.y))
+					{
+						this.attack(gameMain.getCharacter(this.x-1, this.y));
+					}
+					else
+					{
+						this.x -= 1;
+					}
 				}
 				// up
 				else if(key == 38 && gameMain.grid[(this.y-1)][this.x] == 0)
 				{
-					this.y -= 1;
+				    if(gameMain.tileHasCharacter(this.x, this.y-1))
+					{
+						this.attack(gameMain.getCharacter(this.x, this.y-1));
+					}
+					else
+					{
+						this.y -= 1;
+					}
 				}
 				// right
 				else if(key == 39 && gameMain.grid[this.y][(this.x+1)] == 0)
 				{
-					this.x += 1;
+				    if(gameMain.tileHasCharacter(this.x+1, this.y))
+					{
+						this.attack(gameMain.getCharacter(this.x+1, this.y));
+					}
+					else
+					{
+						this.x += 1;
+					}
 				}
 				// down
-				else if(key == 40 && gameMain.grid[(this.y+1)][this.x] == 0)
+				else if(key == 40 && gameMain.grid[(this.y+1)][this.x] == 0)						
 				{
-					this.y += 1;
+					if(gameMain.tileHasCharacter(this.x, this.y+1))
+					{
+						this.attack(gameMain.getCharacter(this.x, this.y+1));
+					}
+					else
+					{
+						this.y += 1;
+					}
 				}
 				
 				//this.hp += hpChange;
+			}		
+			
+			render()
+			{					
+				// onload code so image shows properly once page is opened				
+				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
+				this.drawHealth();
 			}		
 		}
 		
@@ -141,42 +192,55 @@
 				this.x = 0;
 				this.y = 0;
 				
-				this.hp = 0;
-				this.maxHp = 0;
+				this.hp = 100;
+				this.maxHp = 100;
 				
-				this.atk = 0;
-				this.def = 0;
-				
-				this.pic = 0;
-			}
-			
-			getRandomInt(max)
-			{	
-				return Math.floor(Math.random()*(max+1));
-			}
+				this.atk = 3;
+				this.def = 2;							
+			}					
 			
 			update()
 			{				
-				let adjTiles = [];
-															
-				if(gameMain.grid[(this.y-1)][this.x] == 0)
+				let adjTiles = [];				
+				
+				// could use a list of tile offsets to make more concise
+				if(gameMain.tileHasCharacter(this.x, this.y-1))
+				{
+					adjTiles.push("hero");
+				}
+				else if(gameMain.grid[(this.y-1)][this.x] == 0)
 				{
 					adjTiles.push("top");
-				}				
-				if(gameMain.grid[this.y][(this.x+1)] == 0)
+				}
+				
+				if(gameMain.tileHasCharacter(this.x+1, this.y))
+				{
+					adjTiles.push("hero");
+				}
+				else if(gameMain.grid[this.y][this.x+1] == 0)
 				{
 					adjTiles.push("right");
-				}				
-				if(gameMain.grid[(this.y+1)][this.x] == 0)
+				}
+				
+				if(gameMain.tileHasCharacter(this.x, this.y+1))
+				{
+					adjTiles.push("hero");
+				}
+				else if(gameMain.grid[(this.y+1)][this.x] == 0)
 				{
 					adjTiles.push("bottom");
-				}				
-				if(gameMain.grid[this.y][(this.x-1)] == 0)
+				}
+				
+				if(gameMain.tileHasCharacter(this.x-1, this.y))
+				{
+					adjTiles.push("hero");
+				}
+				else if(gameMain.grid[this.y][this.x-1] == 0)
 				{
 					adjTiles.push("left");
-				}
+				}																		
 											
-				let randIndx = this.getRandomInt(adjTiles.length);
+				let randIndx = this.getRandomInt(adjTiles.length);				
 				
 				switch(adjTiles[randIndx])
 				{
@@ -192,6 +256,8 @@
 					case "left":
 						this.x -= 1;						
 						break;
+					case "hero":
+						// attack
 				}							
 			}
 		}
@@ -205,6 +271,12 @@
 				this.x = 1;
 				this.y = 6;
 				
+				this.hp = 100;
+				this.maxHp = 100;
+				
+				this.atk = 3;	
+				this.def = 3;		
+				
 				this.pic = new Image();
 				this.pic.src = "img/snowMonster.png";
 			}
@@ -216,12 +288,11 @@
 					this.pic = new Image();	
 					this.pic.src = "img/snowMonster.png";		
 
-					//let position = gameMain.getGridPosition('S');										
-					//context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
 					context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
 				};
 								
 				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
+				this.drawHealth();
 			}
 		}
 		
@@ -234,6 +305,12 @@
 				this.x = 3;
 				this.y = 1;
 				
+				this.hp = 150;
+				this.maxHp = 150;
+				
+				this.atk = 2;
+				this.def = 4;		
+				
 				this.pic = new Image();
 				this.pic.src = "img/iceGolem.png";
 			}
@@ -244,13 +321,12 @@
 				{										
 					this.pic = new Image();	
 					this.pic.src = "img/iceGolem.png";		
-
-					//let position = gameMain.getGridPosition('G');					
-					//context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
+					
 					context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
 				};
 								
 				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
+				this.drawHealth();
 			}
 		}
 		
@@ -263,6 +339,12 @@
 				this.x = 7;
 				this.y = 3;
 				
+				this.hp = 80;
+				this.maxHp = 80;
+				
+				this.atk = 5;
+				this.def = 1;		
+				
 				this.pic = new Image();
 				this.pic.src = "img/skullMonster.png";
 			}
@@ -273,13 +355,12 @@
 				{										
 					this.pic = new Image();	
 					this.pic.src = "img/skullMonster.png";		
-
-					//let position = gameMain.getGridPosition('V');									
-					//context.drawImage(this.pic, 64 * position.col, 64 * position.row, 64, 64);		
+					
 					context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
 				};
 								
-				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);		
+				context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);	
+				this.drawHealth();				
 			}
 		}
 		
@@ -381,12 +462,26 @@
 					}
 				}								
 			}
+				
+			getCharacter(x, y)
+			{
+				if(this.hero.x == x && this.hero.y == y)
+					return this.hero;
+					
+				for(let i = 0; i < this.monsters.length; i++)
+				{
+					if(this.monsters[i].x == x && this.monsters[i].y == y)
+						return this.monsters[i];
+				}
+				
+				return "character not found";
+			}
 			
 			drawBackground()
-			{
+			{				
 				this.setLineWidth(1000);
 				this.setLineColor("#eef0bd");
-				this.setLineCap(0);
+				this.setLineCap("square");
 				
 				context.beginPath();
 				context.moveTo(this.canvasWidth/2, this.canvasHeight/2);
@@ -411,6 +506,31 @@
 						}
 					}
 				}
+			}
+			
+			tileHasObstacle(x, y)
+			{
+				for(let i = 0; i < this.grid.length; i++)
+				{
+					for(let j = 0; j < this.grid[i].length; j++)
+					{
+						if(this.grid[i][j] == 'B' || this.grid[i][j] == 'T')
+							return true;
+					}					
+				}
+				return false;
+			}
+			
+			tileHasCharacter(x, y)
+			{
+				for(let i = 0; i < this.monsters.length; i++)
+				{
+					if(this.monsters[i].x == x && this.monsters[i].y == y)
+						return true;
+					if(this.hero.x == x && this.hero.y == y)
+						return true;
+				}
+				return false;
 			}
 			
 			updateMonsters()
@@ -533,6 +653,7 @@
 			gameMain.initGrid();
 			gameMain.drawBackground();
 			gameMain.drawObstacles();
+			
 			gameMain.hero.render();
 			gameMain.renderMonsters();					
 		};
@@ -540,32 +661,12 @@
 		document.onkeydown = function(event)
 		{			
 			gameMain.clearCanvas();
-			gameMain.drawBackground();
-			
-			gameMain.hero.update(event.keyCode);
-			gameMain.hero.render();
-			
-			/*switch (event.keyCode) 
-			{
-				// left
-				case 37:					
-					gameMain.hero.update(-1, 0, 0);					
-					break;
-				// up
-				case 38:									
-					gameMain.hero.update(0, -1, 0);					
-					break;
-				// right
-				case 39:					
-					gameMain.hero.update(1, 0, 0);			
-					break;
-				// down
-				case 40:							
-					gameMain.hero.update(0, 1, 0);										
-					break;
-			}*/			
+			gameMain.drawBackground();				
+			gameMain.drawObstacles();
 
-			gameMain.drawObstacles();			
+			gameMain.hero.update(event.keyCode);
+			gameMain.hero.render();		
+			
 			gameMain.updateMonsters();
 			gameMain.renderMonsters();									
 		};			
