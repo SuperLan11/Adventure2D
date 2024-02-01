@@ -1,47 +1,3 @@
-<! --
-		class for drawing
-		class for hero
-		class for enemies
-		class for potions
-		
-		only global variables for:
-			canvas object
-			context2D			
-			main		
-			
-		update hero:
-			same thing, but if hero moves to enemy (after enemy moves), maintain position and lower enemy health
-									
-		
-		hierarchy:
-			Potion
-			Character
-				Hero
-				// for move
-				Monster
-					// for renders
-					Snowman 
-					Void
-					Golem
-							
-		Combat stuff:
-			if hero and enemy move to same tile, enemy stays and both attack
-			if hero and enemy both move and are adjacent after, both attack
-			if enemy moves into obstacle and hero moves beside enemy, hero attack. vice versa for hero
-			if enemy and hero both move into each other, both attack
-			if enemy moves away from hero and hero chases enemy, hero attack
-			
-			enemy should stay still if hero moves to same tile
-			enemy should stay still if hero and enemy move to each other
-			
-			hero updates and renders before enemies
-				
-		TODO:		
-			Fix player taking damage at weird times
-			Delete hero if dead						
-			DRAW GRID AND SHRINK IMAGES
--- >
-
 <!doctype html>
 <html>
 	<script>						
@@ -101,7 +57,7 @@
 				let max = Math.max(1, statDiff);
 				let damage = max*(1 + this.getRandomInt(5));
 				
-				character.hp -= damage;
+				character.hp -= damage;				
 				if(character.hp <= 0)				
 				{								
 					// delete monster if dead
@@ -151,7 +107,7 @@
 				// left
 				if(key == 37 && gameMain.grid[this.y][(this.x-1)] == 0)
 				{
-					if(gameMain.tileHasCharacter(this.x-1, this.y))
+					if(gameMain.tileHasMonster(this.x-1, this.y))
 					{
 						this.attack(gameMain.getCharacter(this.x-1, this.y));
 					}
@@ -163,7 +119,7 @@
 				// up
 				else if(key == 38 && gameMain.grid[(this.y-1)][this.x] == 0)
 				{
-				    if(gameMain.tileHasCharacter(this.x, this.y-1))
+				    if(gameMain.tileHasMonster(this.x, this.y-1))
 					{
 						this.attack(gameMain.getCharacter(this.x, this.y-1));
 					}
@@ -175,7 +131,7 @@
 				// right
 				else if(key == 39 && gameMain.grid[this.y][(this.x+1)] == 0)
 				{
-				    if(gameMain.tileHasCharacter(this.x+1, this.y))
+				    if(gameMain.tileHasMonster(this.x+1, this.y))
 					{
 						this.attack(gameMain.getCharacter(this.x+1, this.y));
 					}
@@ -187,7 +143,7 @@
 				// down
 				else if(key == 40 && gameMain.grid[(this.y+1)][this.x] == 0)						
 				{
-					if(gameMain.tileHasCharacter(this.x, this.y+1))
+					if(gameMain.tileHasMonster(this.x, this.y+1))
 					{
 						this.attack(gameMain.getCharacter(this.x, this.y+1));
 					}
@@ -239,45 +195,44 @@
 			update()
 			{				
 				let adjTiles = [];				
-				
-				// could use a list of tile offsets to make more concise
-				if(gameMain.tileHasCharacter(this.x, this.y-1))
+							
+				if(gameMain.tileHasHero(this.x, (this.y-1)))
 				{
 					adjTiles.push("hero");
 				}
-				else if(gameMain.grid[(this.y-1)][this.x] == 0)
+				else if(gameMain.tileOpen(this.x, (this.y-1)))
 				{
 					adjTiles.push("top");
 				}
 				
-				if(gameMain.tileHasCharacter(this.x+1, this.y))
+				if(gameMain.tileHasHero((this.x+1), this.y))
 				{
 					adjTiles.push("hero");
 				}
-				else if(gameMain.grid[this.y][this.x+1] == 0)
+				else if(gameMain.tileOpen((this.x+1), this.y))
 				{
 					adjTiles.push("right");
 				}
 				
-				if(gameMain.tileHasCharacter(this.x, this.y+1))
+				if(gameMain.tileHasHero(this.x, (this.y+1)))
 				{
 					adjTiles.push("hero");
 				}
-				else if(gameMain.grid[(this.y+1)][this.x] == 0)
+				else if(gameMain.tileOpen(this.x, (this.y+1)))
 				{
 					adjTiles.push("bottom");
 				}
 				
-				if(gameMain.tileHasCharacter(this.x-1, this.y))
+				if(gameMain.tileHasHero((this.x-1), this.y))
 				{
 					adjTiles.push("hero");
 				}
-				else if(gameMain.grid[this.y][this.x-1] == 0)
+				else if(gameMain.tileOpen((this.x-1), this.y))
 				{
 					adjTiles.push("left");
 				}																		
 											
-				let randIndx = this.getRandomInt(adjTiles.length);				
+				let randIndx = this.getRandomInt(adjTiles.length);			
 				
 				switch(adjTiles[randIndx])
 				{
@@ -492,15 +447,40 @@
 					}
 				}
 			}
-
-			tileHasCharacter(x, y)
+			
+			tileOpen(x, y)
+			{
+				if(this.grid[y][x] !== 0)
+						return false;	
+						
+				for(let i = 0; i < this.monsters.length; i++)
+				{
+					if(this.monsters[i].x == x && this.monsters[i].y == y)
+						return false;										
+				}
+				
+				if(this.hero.x == x && this.hero.y == y)
+						return false;																				
+				
+				return true;
+			}
+			
+			tileHasHero(x, y)
+			{
+				for(let i = 0; i < this.monsters.length; i++)
+				{					
+					if(this.hero.x == x && this.hero.y == y)
+						return true;
+				}
+				return false;
+			}
+			
+			tileHasMonster(x, y)
 			{
 				for(let i = 0; i < this.monsters.length; i++)
 				{
 					if(this.monsters[i].x == x && this.monsters[i].y == y)
-						return true;
-					if(this.hero.x == x && this.hero.y == y)
-						return true;
+						return true;					
 				}
 				return false;
 			}
@@ -607,24 +587,24 @@
 			drawTree(x, y)
 			{
 				this.setLineWidth(10);				
-				this.setLineCap("round");
+				this.setLineCap("square");
 										
 				// draw trunk
 				context.beginPath();
 				this.setLineColor("#a69f6c");
-				context.moveTo(x*64 + 32, (y+1)*64);
+				context.moveTo(x*64 + 32, (y+1)*64 - 8);
 				context.lineTo(x*64 + 32, (y+1)*64 - 22);
 				context.moveTo(x*64 + 32, (y+1)*64 - 22);
 				context.stroke();
 				
 				// draw leaves
 				context.beginPath();
-				this.setLineWidth(45);
+				this.setLineCap("round");
+				this.setLineWidth(40);
 				this.setLineColor("#45ad57");						
 				context.lineTo(x*64 + 32, (y+1)*64 - 42);
 				context.moveTo(x*64 + 32, (y+1)*64 - 42);
-				context.stroke();						
-				// add tree to 2d arr here or in advance?
+				context.stroke();										
 			}				
 
 			drawWinScreen()
@@ -650,6 +630,29 @@
 				var message = 'Game Over';
 				context.fillText(message, xOffset, this.canvasHeight/2 + 20);
 			}
+			
+			drawGrid()
+			{
+				this.setLineWidth(1);				
+				this.setLineCap("square");
+				this.setLineColor("#000");
+				
+				for(let x = 1; x < 10; x++)
+				{					
+					context.beginPath();
+					context.moveTo(64 * x, 0);
+					context.lineTo(64 * x, this.canvasHeight);	
+					context.stroke();
+				}
+				
+				for(let y = 1; y < 8; y++)
+				{					
+					context.beginPath();
+					context.moveTo(0, 64 * y);
+					context.lineTo(this.canvasWidth, 64 * y);	
+					context.stroke();
+				}
+			}
 		}
 	</script>
 		
@@ -669,6 +672,7 @@
 			gameMain.hero.render();
 			gameMain.renderMonsters();	
 			gameMain.renderPotions();
+			//gameMain.drawGrid();
 		};
 		
 		document.onkeydown = function(event)
