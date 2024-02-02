@@ -43,7 +43,7 @@
 				context.beginPath();
 				context.moveTo(64 * this.x + 12, 64 * this.y + 4);
 				context.lineTo(64 * this.x + 12 + 40*hpPercent, 64 * this.y + 4);
-				context.stroke();
+				context.stroke();				
 			}
 			
 			getRandomInt(max)
@@ -70,16 +70,20 @@
 			
 			render()
 			{					
-				// will character still exist on grid after death?
-				if(this.hp > 0)
+				if(this.hp > 0 && this.pic.src !== "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/97cea878-3503-432f-8b36-0d72db08b37d/dgp6squ-05d86898-d87c-4621-a853-ecb4b52f1c28.png")
 				{					
 					context.drawImage(this.pic, 64 * this.x, 64 * this.y, 64, 64);	
 					this.drawHealth();
+				}				
+				else if(this.hp > 0 && this.pic.src == "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/97cea878-3503-432f-8b36-0d72db08b37d/dgp6squ-05d86898-d87c-4621-a853-ecb4b52f1c28.png")
+				{					
+					gameMain.drawCroppedHero();
+					this.drawHealth();
 				}
-				else if(this.pic.src = "img/hero.png")
+				else if(this.hp <= 0 && this.pic.src == "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/97cea878-3503-432f-8b36-0d72db08b37d/dgp6squ-05d86898-d87c-4621-a853-ecb4b52f1c28.png")
 				{
-					gameMain.gameLost = true;
-				}							
+					gameMain.gameLost = true;				
+				}
 			}
 		}
 		
@@ -99,7 +103,7 @@
 				this.def = 3;
 				
 				this.pic = new Image();
-				this.pic.src = "img/hero.png";				
+				this.pic.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/i/97cea878-3503-432f-8b36-0d72db08b37d/dgp6squ-05d86898-d87c-4621-a853-ecb4b52f1c28.png";						
 			}			
 			
 			update(key)
@@ -180,16 +184,7 @@
 		{
 			constructor()
 			{
-				super();
-				
-				this.x = 0;
-				this.y = 0;
-				
-				this.hp = 100;
-				this.maxHp = 100;
-				
-				this.atk = 3;
-				this.def = 2;							
+				super();											
 			}					
 			
 			update()
@@ -267,11 +262,12 @@
 				this.hp = 100;
 				this.maxHp = 100;
 				
-				this.atk = 3;	
+				this.atk = 4;	
 				this.def = 3;		
 				
 				this.pic = new Image();
-				this.pic.src = "img/snowMonster.png";
+				this.pic.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/7c95ec7b-5a4f-4aef-93df-78fad9ba2505/ddh4sre-7313626a-ffac-4292-8cd0-83fa9ba0a179.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzdjOTVlYzdiLTVhNGYtNGFlZi05M2RmLTc4ZmFkOWJhMjUwNVwvZGRoNHNyZS03MzEzNjI2YS1mZmFjLTQyOTItOGNkMC04M2ZhOWJhMGExNzkucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.eZkJCAuDAktdw1laXs61bdE77MtkSas-TgPoUXoP7sI";
+				
 			}			
 		}
 		
@@ -287,11 +283,11 @@
 				this.hp = 100;
 				this.maxHp = 100;
 				
-				this.atk = 3;
+				this.atk = 4;
 				this.def = 4;		
 				
 				this.pic = new Image();
-				this.pic.src = "img/iceGolem.png";
+				this.pic.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/7c95ec7b-5a4f-4aef-93df-78fad9ba2505/ddh4smw-250203b0-ca27-42e7-aeeb-5ea7d60e9120.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzdjOTVlYzdiLTVhNGYtNGFlZi05M2RmLTc4ZmFkOWJhMjUwNVwvZGRoNHNtdy0yNTAyMDNiMC1jYTI3LTQyZTctYWVlYi01ZWE3ZDYwZTkxMjAucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.PYTNDbDGEySLudtVzYaHCnFhPMF_LLaKQRy658FX7BY";
 			}			
 		}
 		
@@ -307,11 +303,11 @@
 				this.hp = 80;
 				this.maxHp = 80;
 				
-				this.atk = 5;
+				this.atk = 6;
 				this.def = 2;		
 				
 				this.pic = new Image();
-				this.pic.src = "img/skullMonster.png";
+				this.pic.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/7c95ec7b-5a4f-4aef-93df-78fad9ba2505/ddh4sq9-d7aa0da9-caf3-4120-94a2-a1a47b820c28.png?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzdjOTVlYzdiLTVhNGYtNGFlZi05M2RmLTc4ZmFkOWJhMjUwNVwvZGRoNHNxOS1kN2FhMGRhOS1jYWYzLTQxMjAtOTRhMi1hMWE0N2I4MjBjMjgucG5nIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.BTxkoMb22A0DTNobNhikbNuHieZKliSLqkAfw9XNZTo";
 			}			
 		}
 		
@@ -326,12 +322,12 @@
 			constructor()
 			{				
 				this.pic = new Image();
-				this.pic.src = "img/potion.png";
+				this.pic.src = "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/dc2cbf42-bab0-4038-acbc-f18b651bc8ec/dgb6kab-08b151f8-7eaa-468f-b149-0c63f7eadedc.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcL2RjMmNiZjQyLWJhYjAtNDAzOC1hY2JjLWYxOGI2NTFiYzhlY1wvZGdiNmthYi0wOGIxNTFmOC03ZWFhLTQ2OGYtYjE0OS0wYzYzZjdlYWRlZGMuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.7mXMKTUV77toZsG0uHHWt6BR5PJdGMqu862gx2Fnjm8";
 			}
 			
 			render()
 			{							
-				context.drawImage(this.pic, 64 * this.x + 10, 64 * this.y + 16, 44, 44);												
+				context.drawImage(this.pic, 64 * this.x + 2, 64 * this.y + 16, 60, 60);												
 			}
 		}
 		
@@ -446,6 +442,22 @@
 						}
 					}
 				}
+			}
+			
+			drawCroppedHero()
+			{											
+				let sourceX = 0; // x coordinate of the top-left of the original image
+				let sourceY = 0; // y coordinate of the top-left of the original image
+				let sourceWidth = 280; // width of the original image
+				let sourceHeight = 360; // height of the original image
+				
+				let destX = this.hero.x*64 + 3;// x coordinate of the top-left corner of the tile to draw on
+				let destY = this.hero.y*64; // y coordinate of the top-left corner of the tile to draw on
+				let destWidth = 54; // Width of the image on the tile
+				let destHeight = 64;  // Height of the image on the tile
+
+				// Draw the cropped image
+				context.drawImage(gameMain.hero.pic, sourceX, sourceY, sourceWidth, sourceHeight, destX, destY, destWidth, destHeight);
 			}
 			
 			tileOpen(x, y)
@@ -669,10 +681,10 @@
 			gameMain.drawBackground();
 			gameMain.drawObstacles();
 			
-			gameMain.hero.render();
+			gameMain.hero.render();			
 			gameMain.renderMonsters();	
-			gameMain.renderPotions();
-			//gameMain.drawGrid();
+			gameMain.renderPotions();	
+			
 		};
 		
 		document.onkeydown = function(event)
@@ -685,7 +697,7 @@
 				gameMain.drawObstacles();
 
 				gameMain.hero.update(event.keyCode);
-				gameMain.hero.render();		
+				gameMain.hero.render();						
 				
 				gameMain.updateMonsters();
 				gameMain.renderMonsters();	
@@ -699,7 +711,7 @@
 				gameMain.drawBackground();
 				gameMain.drawObstacles();
 				
-				gameMain.hero.render();	
+				gameMain.hero.render();					
 				gameMain.renderMonsters();	
 				gameMain.renderPotions();	
 			
